@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#050508">
     <title>Afinador Pro - Lucas Gonzalez</title>
     
-    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v6) -->
-    <link rel="manifest" href="./manifest.json?v=6">
+    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v7) -->
+    <link rel="manifest" href="./manifest.json?v=7">
     <link rel="apple-touch-icon" href="./icono.png">
     
     <!-- Fuentes Cyberpunk de Google Fonts -->
@@ -133,7 +133,7 @@
             justify-content: center;
             align-items: center;
             margin-bottom: 20px;
-            min-height: 120px; /* Evita que salte el layout cuando no hay nota */
+            min-height: 120px;
         }
 
         .nota-display {
@@ -267,8 +267,8 @@
                     <path d="M 96 20 A 80 80 0 0 1 104 20" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round" opacity="0.15"/>
                     <line x1="100" y1="8" x2="100" y2="32" stroke="#10B981" stroke-width="3" />
 
-                    <!-- Aguja Animada Cyberpunk (Con transform nativo SVG) -->
-                    <g id="grupo-aguja" transform="rotate(0, 100, 100)">
+                    <!-- Aguja Animada Cyberpunk (Con transform nativo SVG y transición CSS rápida) -->
+                    <g id="grupo-aguja" style="transform-origin: 100px 100px; transition: transform 0.15s ease-out;">
                         <!-- Cuerpo de la aguja -->
                         <polygon id="aguja-poligono" points="98,100 102,100 100,20" />
                         <!-- Círculo base hueco -->
@@ -477,6 +477,10 @@
 
         let buffer = new Float32Array(4096);
         let frecuenciaSuavizada = 0;
+        
+        // Memoria para el filtro de mediana (Elimina saltos falsos)
+        let historialFrecuencias = [];
+        const MAX_HISTORIAL = 5;
 
         function procesarAudio() {
             analyser.getFloatTimeDomainData(buffer);
@@ -484,17 +488,30 @@
 
             if (frecuenciaCruda !== -1) {
                 
-                if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaCruda) > 15) {
-                    frecuenciaSuavizada = frecuenciaCruda;
+                // 1. FILTRO DE MEDIANA: Descartar picos locos guardando historial
+                historialFrecuencias.push(frecuenciaCruda);
+                if (historialFrecuencias.length > MAX_HISTORIAL) {
+                    historialFrecuencias.shift();
+                }
+                
+                let tempSorted = [...historialFrecuencias].sort((a, b) => a - b);
+                let frecuenciaFiltrada = tempSorted[Math.floor(tempSorted.length / 2)];
+
+                // 2. AMORTIGUADOR PESADO (Inercia de la aguja)
+                if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaFiltrada) > 20) {
+                    frecuenciaSuavizada = frecuenciaFiltrada;
                 } else {
-                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.85) + (frecuenciaCruda * 0.15);
+                    // 90% viejo, 10% nuevo (Movimiento súper estable)
+                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.90) + (frecuenciaFiltrada * 0.10);
                 }
 
                 let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
                 let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
-                // Magnetismo al 0
-                if (Math.abs(cents) <= 2) cents = 0;
+                // 3. IMÁN AMPLIADO (Si estás entre -3 y +3, clava la aguja en 0)
+                if (Math.abs(cents) <= 3) {
+                    cents = 0;
+                }
 
                 // Actualizar Textos
                 notaEl.innerHTML = formatearNombreNota(notaMidi);
@@ -508,15 +525,15 @@
                 if(angulo > 75) angulo = 75;
                 if(angulo < -75) angulo = -75;
                 
-                // Rotación directa sobre el SVG para evitar bugs de CSS en móviles
-                agujaGrupo.setAttribute('transform', `rotate(${angulo}, 100, 100)`);
+                // Transform por CSS, aprovechando la transición suave
+                agujaGrupo.style.transform = `rotate(${angulo}deg)`;
 
                 // Actualizar Clases (Inyecta colores a los paneles y aguja)
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
 
-                if (cents < -2) {
+                if (cents < -3) {
                     visorEl.classList.add('estado-bajo');
-                } else if (cents > 2) {
+                } else if (cents > 3) {
                     visorEl.classList.add('estado-alto');
                 } else {
                     visorEl.classList.add('estado-afinado');
@@ -531,7 +548,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner4')
+                navigator.serviceWorker.register('./sw.js?v=tuner5')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
