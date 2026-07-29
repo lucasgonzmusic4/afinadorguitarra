@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#050508">
     <title>Afinador Pro - Lucas Gonzalez</title>
     
-    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v10) -->
-    <link rel="manifest" href="./manifest.json?v=10">
+    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v9) -->
+    <link rel="manifest" href="./manifest.json?v=9">
     <link rel="apple-touch-icon" href="./icono.png">
     
     <!-- Fuentes Cyberpunk de Google Fonts -->
@@ -166,6 +166,7 @@
         #aguja-poligono {
             fill: var(--color-neon);
             filter: var(--sombra-neon);
+            /* Transiciones de color mantenidas, pero sin transición de movimiento */
             transition: fill 0.15s, filter 0.15s;
         }
 
@@ -255,9 +256,8 @@
                     <path d="M 96 20 A 80 80 0 0 1 104 20" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round" opacity="0.15"/>
                     <line x1="100" y1="8" x2="100" y2="32" stroke="#10B981" stroke-width="3" />
 
-                    <!-- Aguja Animada con Micro-Transición Analógica -->
-                    <!-- La transición de 0.08s borra el tartamudeo sin generar delay -->
-                    <g id="grupo-aguja" style="transform-origin: 100px 100px; transition: transform 0.08s linear;">
+                    <!-- Aguja Animada sin CSS Transition (Puro Javascript a 60fps) -->
+                    <g id="grupo-aguja" style="transform-origin: 100px 100px;">
                         <polygon id="aguja-poligono" points="98,100 102,100 100,20" />
                         <circle id="aguja-base" cx="100" cy="100" r="8" stroke-width="3" />
                     </g>
@@ -334,7 +334,7 @@
             }
         }
 
-        // --- MOTOR DEL AFINADOR CROMÁTICO AVANZADO ---
+        // --- MOTOR DEL AFINADOR CROMÁTICO ---
         let audioContext;
         let analyser;
         let microphone;
@@ -384,8 +384,7 @@
             }
             rms = Math.sqrt(rms / SIZE);
             
-            // Compuerta de ruido aumentada: ignora la cola de sonido (cuando ya es puro ruido)
-            if (rms < 0.018) return -1; 
+            if (rms < 0.01) return -1; 
 
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
             for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
@@ -460,6 +459,7 @@
         let buffer = new Float32Array(8192); 
         let frecuenciaSuavizada = 0;
         
+        // Memoria para el filtro de mediana recortada a 5 para menor lag
         let historialFrecuencias = [];
         const MAX_HISTORIAL = 5; 
 
@@ -478,7 +478,7 @@
                     }
                 }
 
-                // FILTRO DE MEDIANA
+                // FILTRO DE MEDIANA (Atenuado para mayor respuesta)
                 historialFrecuencias.push(freqProcesada);
                 if (historialFrecuencias.length > MAX_HISTORIAL) {
                     historialFrecuencias.shift();
@@ -487,21 +487,18 @@
                 let tempSorted = [...historialFrecuencias].sort((a, b) => a - b);
                 let frecuenciaFiltrada = tempSorted[Math.floor(tempSorted.length / 2)];
 
-                // SUAVIZADO DINÁMICO (Cero lag visual, máxima estabilidad)
-                let diferencia = Math.abs(frecuenciaSuavizada - frecuenciaFiltrada);
-                
-                if (frecuenciaSuavizada === 0 || diferencia > 15) {
-                    // Si saltamos de nota, que la aguja salte instantáneamente
+                // AMORTIGUADOR RÁPIDO (Menos inercia matemática = reacción en tiempo real)
+                if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaFiltrada) > 20) {
                     frecuenciaSuavizada = frecuenciaFiltrada;
                 } else {
-                    // Ajuste fino: freno analógico (85% vieja, 15% nueva)
-                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.85) + (frecuenciaFiltrada * 0.15);
+                    // 60% viejo, 40% nuevo (Más sensible al movimiento real de la clavija)
+                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.60) + (frecuenciaFiltrada * 0.40);
                 }
 
                 let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
                 let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
-                // IMÁN 
+                // IMÁN
                 if (Math.abs(cents) <= 3) cents = 0;
 
                 // Actualizar Textos
@@ -516,7 +513,7 @@
                 if(angulo > 75) angulo = 75;
                 if(angulo < -75) angulo = -75;
                 
-                // Rotación de aguja combinada con el CSS Transition ultra-rápido (0.08s)
+                // Aplicación directa sin CSS Transition (Fluidéz de 60fps)
                 agujaGrupo.style.transform = `rotate(${angulo}deg)`;
 
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
@@ -538,7 +535,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner10')
+                navigator.serviceWorker.register('./sw.js?v=tuner7')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
