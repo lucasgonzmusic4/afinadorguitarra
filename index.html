@@ -6,10 +6,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0a0a">
-    <title>Afinador - Lucas Gonzalez</title>
+    <title>Afinador Pro - Lucas Gonzalez</title>
     
-    <!-- Enlaces obligatorios PWA -->
-    <link rel="manifest" href="./manifest.json?v=1">
+    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché) -->
+    <link rel="manifest" href="./manifest.json?v=4">
     <link rel="apple-touch-icon" href="./icono.png">
     
     <!-- Alertas Profesionales -->
@@ -51,9 +51,6 @@
         .btn-fucsia:active { background-color: #cc00cc; }
         .btn-fucsia:disabled { background-color: #550055; color: #aaa; box-shadow: none; cursor: not-allowed; }
 
-        .btn-transparente { background-color: transparent; color: #00f3ff; border: 1px solid #00f3ff; }
-        .btn-transparente:active { background-color: rgba(0, 243, 255, 0.1); }
-
         /* Inputs estilo Flet */
         .input-cyber {
             width: 90%; max-width: 420px; padding: 15px;
@@ -63,13 +60,13 @@
         }
         .input-cyber:focus { box-shadow: 0 0 10px rgba(255,0,255,0.3); }
 
-        /* --- ESTILOS ESPECÍFICOS DEL AFINADOR --- */
+        /* --- ESTILOS DEL VELOCÍMETRO CYBERPUNK --- */
         .visor-afinador {
-            width: 90%; max-width: 500px;
-            background: linear-gradient(180deg, #111, #0a0a0a);
+            width: 90%; max-width: 450px;
+            background: linear-gradient(180deg, #111, #080808);
             border: 2px solid #222;
             border-radius: 20px;
-            padding: 40px 20px;
+            padding: 30px 15px;
             margin-top: 30px;
             display: flex;
             flex-direction: column;
@@ -78,8 +75,38 @@
             transition: all 0.3s ease;
         }
 
+        .gauge-container {
+            width: 100%;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            overflow: visible;
+        }
+
+        /* Aguja animada por CSS */
+        #grupo-aguja {
+            transform-origin: 100px 100px;
+            transform: rotate(0deg);
+            transition: transform 0.15s ease-out; /* Suavidad en el movimiento */
+        }
+
+        /* Textos superpuestos al velocímetro */
+        .gauge-text {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            width: 100%;
+        }
+
         .nota-display {
-            font-size: 7em;
+            font-size: 5.5em;
             font-weight: 900;
             line-height: 1;
             margin: 0;
@@ -92,73 +119,46 @@
             vertical-align: super;
         }
 
+        .cents-display {
+            font-size: 1em;
+            font-weight: bold;
+            color: #555;
+            margin-top: 5px;
+        }
+
         .hz-display {
-            font-size: 1.2em;
+            font-size: 1.1em;
             color: #555;
             font-family: monospace;
             letter-spacing: 2px;
-            margin-top: 10px;
-            margin-bottom: 40px;
-        }
-
-        /* Medidor (Gauge) */
-        .gauge-container {
-            width: 100%;
-            height: 40px;
-            position: relative;
-            background: #1a1a1a;
-            border-radius: 20px;
-            border: 1px solid #333;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-        }
-
-        .gauge-centro {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background-color: #fff;
-            transform: translateX(-50%);
-            z-index: 10;
-        }
-
-        .gauge-aguja {
-            position: absolute;
-            left: 50%; /* Punto de inicio 0 cents */
-            width: 15px;
-            height: 110%;
-            background-color: #333;
-            border-radius: 5px;
-            transform: translateX(-50%);
-            transition: transform 0.1s linear, background-color 0.2s ease;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            z-index: 20;
+            margin-top: 20px;
         }
 
         .estado-texto {
-            margin-top: 20px;
+            margin-top: 15px;
             font-size: 1.5em;
             font-weight: bold;
             color: #555;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
+            transition: color 0.2s ease;
         }
 
         /* --- ESTADOS DE COLOR DINÁMICOS --- */
         .estado-bajo .nota-display { color: #ff00ff; text-shadow: 0 0 30px rgba(255, 0, 255, 0.6); }
-        .estado-bajo .gauge-aguja { background-color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
-        .estado-bajo .estado-texto { color: #ff00ff; }
+        .estado-bajo #aguja-linea { stroke: #ff00ff; filter: drop-shadow(0px 0px 8px #ff00ff); }
+        .estado-bajo #aguja-circulo { stroke: #ff00ff; }
+        .estado-bajo .estado-texto, .estado-bajo .cents-display { color: #ff00ff; }
         
         .estado-alto .nota-display { color: #00f3ff; text-shadow: 0 0 30px rgba(0, 243, 255, 0.6); }
-        .estado-alto .gauge-aguja { background-color: #00f3ff; box-shadow: 0 0 15px #00f3ff; }
-        .estado-alto .estado-texto { color: #00f3ff; }
+        .estado-alto #aguja-linea { stroke: #00f3ff; filter: drop-shadow(0px 0px 8px #00f3ff); }
+        .estado-alto #aguja-circulo { stroke: #00f3ff; }
+        .estado-alto .estado-texto, .estado-alto .cents-display { color: #00f3ff; }
         
         .estado-afinado .nota-display { color: #10B981; text-shadow: 0 0 40px rgba(16, 185, 129, 0.8); }
-        .estado-afinado .gauge-aguja { background-color: #10B981; box-shadow: 0 0 20px #10B981; }
-        .estado-afinado .estado-texto { color: #10B981; }
+        .estado-afinado #aguja-linea { stroke: #10B981; filter: drop-shadow(0px 0px 10px #10B981); }
+        .estado-afinado #aguja-circulo { stroke: #10B981; }
+        .estado-afinado .estado-texto, .estado-afinado .cents-display { color: #10B981; }
         .estado-afinado.visor-afinador { border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(16, 185, 129, 0.1); }
 
     </style>
@@ -181,17 +181,38 @@
 
     <!-- ================= PANTALLA 2: AFINADOR ================= -->
     <div id="pantalla-afinador" class="pantalla" style="padding-top: 20px;">
-        <h1 class="titulo-flet" style="margin-top: 20px;">AFINADOR CROMÁTICO</h1>
+        <h1 class="titulo-flet" style="margin-top: 20px;">AFINADOR PRO</h1>
         
         <div id="visor" class="visor-afinador">
-            <h2 id="nota-ui" class="nota-display">-</h2>
-            <div id="hz-ui" class="hz-display">0.00 Hz</div>
             
+            <!-- Velocímetro Vectorial -->
             <div class="gauge-container">
-                <div class="gauge-centro"></div>
-                <div id="aguja-ui" class="gauge-aguja"></div>
+                <svg viewBox="0 0 200 120" class="gauge-svg">
+                    <!-- Arco de fondo suave -->
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+                    
+                    <!-- Marcas (Ticks) -->
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#444" stroke-width="12" stroke-dasharray="2 18"/>
+                    
+                    <!-- Centro verde (Punto de afinación perfecto) -->
+                    <path d="M 97 20 A 80 80 0 0 1 103 20" fill="none" stroke="#10B981" stroke-width="14" stroke-linecap="round" opacity="0.5"/>
+                    <line x1="100" y1="12" x2="100" y2="28" stroke="#10B981" stroke-width="3" />
+
+                    <!-- Aguja Animada -->
+                    <g id="grupo-aguja">
+                        <line id="aguja-linea" x1="100" y1="100" x2="100" y2="20" stroke="#333" stroke-width="4" stroke-linecap="round" />
+                        <circle id="aguja-circulo" cx="100" cy="100" r="8" fill="#111" stroke="#333" stroke-width="3" />
+                    </g>
+                </svg>
+                
+                <!-- Letra en el centro del arco -->
+                <div class="gauge-text">
+                    <h2 id="nota-ui" class="nota-display">-</h2>
+                    <div id="cents-ui" class="cents-display">0 cents</div>
+                </div>
             </div>
             
+            <div id="hz-ui" class="hz-display">0.00 Hz</div>
             <div id="estado-ui" class="estado-texto">ESPERANDO</div>
         </div>
 
@@ -257,24 +278,23 @@
         let audioContext;
         let analyser;
         let microphone;
+        let biquadFilter;
         let isTuning = false;
 
         const NOMBRES_NOTAS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-        
-        // Frecuencia estándar del LA (A4)
         const A4_FREQ = 440; 
         
         // Elementos de la UI
         const visorEl = document.getElementById('visor');
         const notaEl = document.getElementById('nota-ui');
+        const centsEl = document.getElementById('cents-ui');
         const hzEl = document.getElementById('hz-ui');
-        const agujaEl = document.getElementById('aguja-ui');
+        const agujaGrupo = document.getElementById('grupo-aguja');
         const estadoEl = document.getElementById('estado-ui');
         const btnEncender = document.getElementById('btn-encender');
 
         // Matemáticas Musicales
         function calcularNotaDesdeFrecuencia(frecuencia) {
-            // Formula MIDI: 69 es el LA4
             let noteNum = 12 * (Math.log(frecuencia / A4_FREQ) / Math.log(2));
             return Math.round(noteNum) + 69;
         }
@@ -290,8 +310,6 @@
 
         function formatearNombreNota(notaMidi) {
             let nombre = NOMBRES_NOTAS[notaMidi % 12];
-            let octava = Math.floor(notaMidi / 12) - 1;
-            
             if(nombre.includes("#")) {
                 let partes = nombre.split("#");
                 return `${partes[0]}<span>#</span>`;
@@ -299,7 +317,7 @@
             return nombre;
         }
 
-        // Algoritmo de Autocorrelación para JS (Robusto para guitarra)
+        // Algoritmo de Autocorrelación para JS
         function autoCorrelate(buf, sampleRate) {
             let SIZE = buf.length;
             let rms = 0;
@@ -309,23 +327,19 @@
                 rms += val * val;
             }
             rms = Math.sqrt(rms / SIZE);
-            if (rms < 0.01) return -1; // No hay volumen suficiente
+            if (rms < 0.01) return -1; // No hay volumen (Gate)
 
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
-            for (let i = 0; i < SIZE / 2; i++)
-                if (Math.abs(buf[i]) < thres) { r1 = i; break; }
-            for (let i = 1; i < SIZE / 2; i++)
-                if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+            for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+            for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
 
             buf = buf.slice(r1, r2);
             SIZE = buf.length;
 
             let c = new Array(SIZE).fill(0);
-            for (let i = 0; i < SIZE; i++) {
-                for (let j = 0; j < SIZE - i; j++) {
+            for (let i = 0; i < SIZE; i++)
+                for (let j = 0; j < SIZE - i; j++)
                     c[i] = c[i] + buf[j] * buf[j + i];
-                }
-            }
 
             let d = 0; while (c[d] > c[d + 1]) d++;
             let maxval = -1, maxpos = -1;
@@ -349,28 +363,35 @@
             if (isTuning) return;
 
             try {
-                // 1. Pedir micrófono (El usuario debe aceptar el cartel)
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // 2. Inicializar el motor de audio web
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 if(audioContext.state === 'suspended') {
                     await audioContext.resume();
                 }
 
+                // Filtro Pasa-Bajos: El asesino de armónicas falsas
+                // Corta todo arriba de 350Hz. El Mi alto de la guitarra es 330Hz.
+                biquadFilter = audioContext.createBiquadFilter();
+                biquadFilter.type = "lowpass";
+                biquadFilter.frequency.value = 350; 
+                biquadFilter.Q.value = 1;
+
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 2048;
+                // 4096 da mayor resolución en frecuencias bajas (graves)
+                analyser.fftSize = 4096;
 
                 microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser);
                 
-                // Actualizar interfaz
+                // Pipeline: Micrófono -> Filtro LowPass -> Analizador
+                microphone.connect(biquadFilter);
+                biquadFilter.connect(analyser);
+                
                 isTuning = true;
                 btnEncender.innerText = "ESCUCHANDO...";
                 btnEncender.disabled = true;
                 btnEncender.className = "btn-principal btn-transparente";
                 
-                // Arrancar el bucle
                 procesarAudio();
 
             } catch (err) {
@@ -383,36 +404,42 @@
             }
         }
 
-        let buffer = new Float32Array(2048);
+        let buffer = new Float32Array(4096);
+        let frecuenciaSuavizada = 0;
 
         function procesarAudio() {
             analyser.getFloatTimeDomainData(buffer);
-            let frecuenciaHz = autoCorrelate(buffer, audioContext.sampleRate);
+            let frecuenciaCruda = autoCorrelate(buffer, audioContext.sampleRate);
 
-            if (frecuenciaHz === -1) {
-                // No hay sonido, apagamos UI sutilmente
-                if(visorEl.classList.contains('estado-afinado')) {
-                    // Mantener el color un ratito o limpiar
+            if (frecuenciaCruda !== -1) {
+                
+                // Sistema Anti-Oscilación (Smoothing)
+                // Si la frecuencia salta de golpe (cambiaste de cuerda), reseteamos rápido.
+                // Si está cerca, hacemos un promedio para que la aguja no tiemble.
+                if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaCruda) > 15) {
+                    frecuenciaSuavizada = frecuenciaCruda;
+                } else {
+                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.8) + (frecuenciaCruda * 0.2);
                 }
-            } else {
-                // Hay sonido: calcular matemáticas
-                let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaHz);
-                let cents = calcularCentsOffset(frecuenciaHz, notaMidi);
+
+                let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
+                let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
                 // Actualizar Textos
                 notaEl.innerHTML = formatearNombreNota(notaMidi);
-                hzEl.innerText = frecuenciaHz.toFixed(1) + " Hz";
-
-                // Mapear los cents (-50 a +50) a píxeles en el CSS (traslación de -50% base)
-                // -50 cents = -200px (izquierda), +50 cents = +200px (derecha) en el UI
-                let desplazamiento = (cents * 2.5); 
-                // Evitar que la aguja se salga del cuadro visualmente
-                if(desplazamiento < -140) desplazamiento = -140;
-                if(desplazamiento > 140) desplazamiento = 140;
+                hzEl.innerText = frecuenciaSuavizada.toFixed(1) + " Hz";
                 
-                agujaEl.style.transform = `translateX(calc(-50% + ${desplazamiento}px))`;
+                let signo = cents > 0 ? "+" : "";
+                centsEl.innerText = `${signo}${cents} cents`;
 
-                // Actualizar Clases de Estado (Colores de Neón)
+                // Mapear los cents a los grados de la aguja (-50 a +50 cents = -65 a +65 grados)
+                let angulo = (cents / 50) * 65; 
+                if(angulo > 65) angulo = 65;
+                if(angulo < -65) angulo = -65;
+                
+                agujaGrupo.style.transform = `rotate(${angulo}deg)`;
+
+                // Actualizar Clases de Estado
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
 
                 if (cents < -3) {
@@ -427,7 +454,6 @@
                 }
             }
 
-            // Bucle a 60 FPS
             if(isTuning) {
                 requestAnimationFrame(procesarAudio);
             }
@@ -436,7 +462,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner1')
+                navigator.serviceWorker.register('./sw.js?v=tuner2')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
