@@ -5,113 +5,159 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0a0a0a">
-    <title>Afinador - Lucas Gonzalez</title>
+    <meta name="theme-color" content="#050508">
+    <title>Afinador Pro - Lucas Gonzalez</title>
     
-    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché) -->
-    <link rel="manifest" href="./manifest.json?v=5">
+    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v6) -->
+    <link rel="manifest" href="./manifest.json?v=6">
     <link rel="apple-touch-icon" href="./icono.png">
     
+    <!-- Fuentes Cyberpunk de Google Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap');
+    </style>
+
     <!-- Alertas Profesionales -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         /* --- VARIABLES GLOBALES DE NEÓN --- */
         :root {
-            --color-neon: #333333;
+            --color-neon: #444444;
             --sombra-neon: none;
             --brillo-texto: none;
+            --bg-hud: rgba(255, 255, 255, 0.02);
         }
 
         .estado-bajo { 
             --color-neon: #ff00ff; 
-            --sombra-neon: drop-shadow(0 0 12px #ff00ff);
-            --brillo-texto: 0 0 20px rgba(255, 0, 255, 0.8);
+            --sombra-neon: drop-shadow(0 0 10px #ff00ff);
+            --brillo-texto: 0 0 25px rgba(255, 0, 255, 0.9);
+            --bg-hud: rgba(255, 0, 255, 0.05);
         }
         .estado-alto { 
             --color-neon: #00f3ff; 
-            --sombra-neon: drop-shadow(0 0 12px #00f3ff);
-            --brillo-texto: 0 0 20px rgba(0, 243, 255, 0.8);
+            --sombra-neon: drop-shadow(0 0 10px #00f3ff);
+            --brillo-texto: 0 0 25px rgba(0, 243, 255, 0.9);
+            --bg-hud: rgba(0, 243, 255, 0.05);
         }
         .estado-afinado { 
             --color-neon: #10B981; 
             --sombra-neon: drop-shadow(0 0 15px #10B981);
-            --brillo-texto: 0 0 30px rgba(16, 185, 129, 1);
+            --brillo-texto: 0 0 35px rgba(16, 185, 129, 1);
+            --bg-hud: rgba(16, 185, 129, 0.08);
         }
 
         /* --- ESTILOS GENERALES Y DEL ECOSISTEMA --- */
         html, body {
-            background-color: #0a0a0a; color: #ffffff;
-            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #050508; color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
             margin: 0; padding: 0; overflow-x: hidden; 
             user-select: none; -webkit-user-select: none;
         }
 
+        /* Cuadrícula Cyberpunk en el fondo de la pantalla */
+        body {
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center center;
+        }
+
         .titulo-flet {
             color: #00f3ff;
+            font-family: 'Orbitron', sans-serif;
             font-size: 2.2em; font-weight: 900; text-align: center;
             margin-top: 40px; letter-spacing: 4px;
             text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
         }
         
         .titulo-activacion {
             color: #ff00ff;
+            font-family: 'Orbitron', sans-serif;
             font-size: 1.5em; font-weight: 900; text-align: center;
             margin-top: 40px; letter-spacing: 2px;
         }
 
-        .pantalla { display: none; width: 100vw; min-height: 100vh; flex-direction: column; align-items: center; background-color: #0a0a0a; padding-bottom: 40px; }
+        .pantalla { display: none; width: 100vw; min-height: 100vh; flex-direction: column; align-items: center; padding-bottom: 40px; }
         .activa { display: flex; }
 
-        /* Botones estilo Flet Original */
+        /* Botones estilo Flet Original Modernizados */
         .btn-principal {
-            padding: 18px 30px; margin: 10px; font-size: 1.1em; font-weight: 800;
+            font-family: 'Rajdhani', sans-serif;
+            padding: 18px 30px; margin: 10px; font-size: 1.2em; font-weight: 800;
             cursor: pointer; border-radius: 8px; transition: 0.3s;
-            width: 85%; max-width: 380px; text-transform: uppercase; letter-spacing: 2px;
+            width: 85%; max-width: 380px; text-transform: uppercase; letter-spacing: 3px;
             display: flex; justify-content: center; align-items: center; gap: 10px;
             border: none;
         }
-        .btn-fucsia { background-color: #ff00ff; color: #ffffff; box-shadow: 0 4px 15px rgba(255, 0, 255, 0.2); }
-        .btn-fucsia:active { background-color: #cc00cc; box-shadow: 0 0 25px rgba(255, 0, 255, 0.8); }
+        .btn-fucsia { background-color: #ff00ff; color: #ffffff; box-shadow: 0 4px 20px rgba(255, 0, 255, 0.3); }
+        .btn-fucsia:active { background-color: #cc00cc; box-shadow: 0 0 30px rgba(255, 0, 255, 0.8); }
 
-        /* Inputs estilo Flet */
         .input-cyber {
+            font-family: 'Rajdhani', sans-serif;
             width: 90%; max-width: 420px; padding: 15px;
-            background-color: #111; color: #00f3ff; border: 1px solid #ff00ff;
-            border-radius: 5px; font-size: 1.1em; margin-bottom: 20px;
+            background-color: rgba(17, 17, 17, 0.8); color: #00f3ff; border: 1px solid #ff00ff;
+            border-radius: 5px; font-size: 1.2em; margin-bottom: 20px;
             outline: none; box-sizing: border-box; font-weight: bold;
         }
-        .input-cyber:focus { box-shadow: 0 0 10px rgba(255,0,255,0.3); }
+        .input-cyber:focus { box-shadow: 0 0 15px rgba(255,0,255,0.4); }
 
-        /* --- ESTILOS DEL VELOCÍMETRO CYBERPUNK --- */
+        /* --- VISOR HOLOGRÁFICO SEPARADO --- */
         .visor-afinador {
             width: 90%; max-width: 450px;
-            background-color: #0d0d12;
-            /* Grid Holográfica */
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-            border: 2px solid #222;
-            border-radius: 20px;
-            padding: 40px 15px 30px 15px;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 30px 20px;
             margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(0, 0, 0, 0.8);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 30px var(--bg-hud);
+            transition: all 0.3s ease;
         }
 
         .estado-afinado.visor-afinador { 
-            border-color: rgba(16, 185, 129, 0.4); 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 40px rgba(16, 185, 129, 0.15); 
+            border-color: rgba(16, 185, 129, 0.3); 
         }
 
+        /* 1. SECCIÓN SUPERIOR: LA NOTA GIGANTE */
+        .nota-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            min-height: 120px; /* Evita que salte el layout cuando no hay nota */
+        }
+
+        .nota-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 7.5em;
+            font-weight: 900;
+            line-height: 1;
+            margin: 0;
+            color: var(--color-neon);
+            text-shadow: var(--brillo-texto);
+            transition: color 0.15s ease, text-shadow 0.15s ease;
+        }
+        .nota-display span {
+            font-size: 0.4em;
+            vertical-align: top;
+            margin-left: -5px;
+        }
+
+        /* 2. SECCIÓN MEDIA: VELOCÍMETRO LIMPIO */
         .gauge-container {
             width: 100%;
+            max-width: 300px;
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .gauge-svg {
@@ -121,67 +167,52 @@
             overflow: visible;
         }
 
-        /* Aguja animada y estilizada por variables CSS */
-        #grupo-aguja {
-            transform-origin: 100px 130px;
-            transform: rotate(0deg);
-            transition: transform 0.1s ease-out; /* Super suave */
-        }
-        
         #aguja-poligono {
             fill: var(--color-neon);
             filter: var(--sombra-neon);
-            transition: fill 0.2s, filter 0.2s;
+            transition: fill 0.15s, filter 0.15s;
         }
 
         #aguja-base {
+            fill: #111;
             stroke: var(--color-neon);
             box-shadow: var(--sombra-neon);
-            transition: stroke 0.2s;
+            transition: stroke 0.15s;
         }
 
-        /* Textos superpuestos al velocímetro */
-        .gauge-text {
-            position: absolute;
-            bottom: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            width: 100%;
-        }
-
-        .nota-display {
-            font-size: 6.5em;
-            font-weight: 900;
-            font-style: italic;
-            line-height: 1;
-            margin: 0;
-            color: var(--color-neon);
-            text-shadow: var(--brillo-texto);
-            transition: color 0.2s ease, text-shadow 0.2s ease;
-        }
-        .nota-display span {
-            font-size: 0.4em;
-            vertical-align: super;
-            font-style: normal;
-        }
-
+        /* 3. SECCIÓN INFERIOR: HUD TÉCNICO */
         .hud-box {
-            display: inline-block;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
             border: 1px solid var(--color-neon);
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-            transition: border-color 0.2s ease;
+            background: var(--bg-hud);
+            padding: 12px 20px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
         }
 
-        .hz-display {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: var(--color-neon);
-            font-family: monospace;
+        .hud-valor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hud-label {
+            font-size: 0.8em;
+            color: #666;
             letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .hud-data {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--color-neon);
+            letter-spacing: 1px;
             transition: color 0.2s ease;
         }
 
@@ -203,12 +234,12 @@
         <h1 class="titulo-activacion">ACTIVACIÓN DE SOFTWARE</h1>
         
         <div style="margin-top: 20px; width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <p style="color: #777; width: 90%; max-width: 420px; text-align: center; margin-bottom: 20px; font-size: 0.9em;">
+            <p style="color: #777; font-family: 'Rajdhani', sans-serif; width: 90%; max-width: 420px; text-align: center; margin-bottom: 20px; font-size: 1.1em;">
                 Ingresa el correo con el que realizaste la compra.
             </p>
             <input type="email" id="input-email-login" class="input-cyber" style="border-color: #00f3ff; color: #fff;" placeholder="Email de Compra">
             <button class="btn-principal btn-fucsia" onclick="intentarActivar()">ACTIVAR APLICACIÓN</button>
-            <p id="mensaje-login" style="color: red; font-weight: bold; margin-top: 15px;"></p>
+            <p id="mensaje-login" style="color: red; font-weight: bold; margin-top: 15px; font-size: 1.2em;"></p>
         </div>
     </div>
 
@@ -218,44 +249,52 @@
         
         <div id="visor" class="visor-afinador">
             
-            <!-- Velocímetro Vectorial Avanzado -->
-            <div class="gauge-container">
-                <svg viewBox="0 0 200 150" class="gauge-svg">
-                    <!-- Arco de fondo grueso -->
-                    <path d="M 20 130 A 80 80 0 0 1 180 130" fill="none" stroke="#111" stroke-width="18" stroke-linecap="round"/>
-                    
-                    <!-- Marcas (Ticks) segmentadas -->
-                    <path d="M 20 130 A 80 80 0 0 1 180 130" fill="none" stroke="#2a2a2a" stroke-width="18" stroke-dasharray="3 7"/>
-                    
-                    <!-- Marcas de los extremos y el centro -->
-                    <path d="M 97 49 A 80 80 0 0 1 103 49" fill="none" stroke="#10B981" stroke-width="24" stroke-linecap="round" opacity="0.2"/>
-                    <line x1="100" y1="35" x2="100" y2="60" stroke="#10B981" stroke-width="3" />
-
-                    <!-- Aguja Animada Cyberpunk -->
-                    <g id="grupo-aguja">
-                        <!-- Cuerpo de la aguja -->
-                        <polygon id="aguja-poligono" points="97,130 103,130 100,45" />
-                        <!-- Círculo base -->
-                        <circle id="aguja-base" cx="100" cy="130" r="10" fill="#0a0a0a" stroke-width="3" />
-                    </g>
-                </svg>
-                
-                <!-- Textos Centrales -->
-                <div class="gauge-text">
-                    <h2 id="nota-ui" class="nota-display">-</h2>
-                </div>
+            <!-- 1. Nota Principal Separada -->
+            <div class="nota-container">
+                <h2 id="nota-ui" class="nota-display">-</h2>
             </div>
             
-            <!-- HUD Inferior con data técnica -->
+            <!-- 2. Velocímetro Vectorial Limpio -->
+            <div class="gauge-container">
+                <svg viewBox="0 0 200 120" class="gauge-svg">
+                    <!-- Arco de fondo grueso -->
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#15151a" stroke-width="12" stroke-linecap="round"/>
+                    
+                    <!-- Marcas (Ticks) segmentadas tecnológicas -->
+                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2a35" stroke-width="12" stroke-dasharray="2 10.5"/>
+                    
+                    <!-- Marcas de los extremos y el centro (Verde) -->
+                    <path d="M 96 20 A 80 80 0 0 1 104 20" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round" opacity="0.15"/>
+                    <line x1="100" y1="8" x2="100" y2="32" stroke="#10B981" stroke-width="3" />
+
+                    <!-- Aguja Animada Cyberpunk (Con transform nativo SVG) -->
+                    <g id="grupo-aguja" transform="rotate(0, 100, 100)">
+                        <!-- Cuerpo de la aguja -->
+                        <polygon id="aguja-poligono" points="98,100 102,100 100,20" />
+                        <!-- Círculo base hueco -->
+                        <circle id="aguja-base" cx="100" cy="100" r="8" stroke-width="3" />
+                    </g>
+                </svg>
+            </div>
+            
+            <!-- 3. HUD Inferior con data técnica -->
             <div class="hud-box">
-                <div id="hz-ui" class="hz-display">0.00 Hz</div>
+                <div class="hud-valor">
+                    <span class="hud-label">DESVÍO</span>
+                    <span id="cents-ui" class="hud-data">0</span>
+                </div>
+                <div class="hud-valor">
+                    <span class="hud-label">FRECUENCIA</span>
+                    <span id="hz-ui" class="hud-data">0.0</span>
+                </div>
             </div>
         </div>
 
+        <!-- Contenedor del Botón (Desaparece al encender) -->
         <div id="contenedor-encendido">
             <button class="btn-principal btn-fucsia" onclick="arrancarAfinador()">ACTIVAR MICRÓFONO</button>
-            <p style="color: #555; font-size: 0.85em; text-align: center; width: 80%; margin-top: 15px;">
-                Requiere permisos de audio.
+            <p style="color: #555; font-size: 1em; text-align: center; width: 80%; margin-top: 15px;">
+                Se requieren permisos de hardware de audio.
             </p>
         </div>
     </div>
@@ -323,6 +362,7 @@
         // Elementos de la UI
         const visorEl = document.getElementById('visor');
         const notaEl = document.getElementById('nota-ui');
+        const centsEl = document.getElementById('cents-ui');
         const hzEl = document.getElementById('hz-ui');
         const agujaGrupo = document.getElementById('grupo-aguja');
         const contenedorEncendido = document.getElementById('contenedor-encendido');
@@ -362,8 +402,7 @@
             }
             rms = Math.sqrt(rms / SIZE);
             
-            // Subimos el umbral de corte para ignorar ruidos fantasmas
-            if (rms < 0.015) return -1; 
+            if (rms < 0.015) return -1; // Gate de sonido
 
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
             for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
@@ -406,7 +445,6 @@
                     await audioContext.resume();
                 }
 
-                // Filtro Pasa-Bajos para matar los armónicos de guitarra
                 biquadFilter = audioContext.createBiquadFilter();
                 biquadFilter.type = "lowpass";
                 biquadFilter.frequency.value = 350; 
@@ -421,7 +459,7 @@
                 
                 isTuning = true;
                 
-                // Limpieza de UI: Ocultamos el botón al encender
+                // Efecto desaparición del botón
                 contenedorEncendido.style.opacity = '0';
                 setTimeout(() => { contenedorEncendido.style.display = 'none'; }, 300);
                 
@@ -446,35 +484,34 @@
 
             if (frecuenciaCruda !== -1) {
                 
-                // Sistema Anti-Oscilación Ultra Estable
                 if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaCruda) > 15) {
                     frecuenciaSuavizada = frecuenciaCruda;
                 } else {
-                    // 85% viejo, 15% nuevo (Movimiento súper denso y fluido)
                     frecuenciaSuavizada = (frecuenciaSuavizada * 0.85) + (frecuenciaCruda * 0.15);
                 }
 
                 let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
                 let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
-                // TRUCO DE ESTABILIDAD: Efecto Magnetismo al 0
-                // Si la aguja está muy cerca de la afinación perfecta, la "clava" en el medio.
-                if (Math.abs(cents) <= 2) {
-                    cents = 0;
-                }
+                // Magnetismo al 0
+                if (Math.abs(cents) <= 2) cents = 0;
 
                 // Actualizar Textos
                 notaEl.innerHTML = formatearNombreNota(notaMidi);
-                hzEl.innerText = frecuenciaSuavizada.toFixed(1) + " Hz";
+                hzEl.innerText = frecuenciaSuavizada.toFixed(1);
+                
+                let signo = cents > 0 ? "+" : "";
+                centsEl.innerText = `${signo}${cents}`;
 
-                // Mapear los cents a los grados de la aguja (-50 a +50 cents = -75 a +75 grados)
+                // Mapear Cents a Grados (Arco de -75 a +75 grados)
                 let angulo = (cents / 50) * 75; 
                 if(angulo > 75) angulo = 75;
                 if(angulo < -75) angulo = -75;
                 
-                agujaGrupo.style.transform = `rotate(${angulo}deg)`;
+                // Rotación directa sobre el SVG para evitar bugs de CSS en móviles
+                agujaGrupo.setAttribute('transform', `rotate(${angulo}, 100, 100)`);
 
-                // Actualizar Clases de Estado (Inyectando variables CSS mágicamente)
+                // Actualizar Clases (Inyecta colores a los paneles y aguja)
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
 
                 if (cents < -2) {
@@ -494,7 +531,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner3')
+                navigator.serviceWorker.register('./sw.js?v=tuner4')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
