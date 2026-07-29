@@ -6,16 +6,39 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0a0a">
-    <title>Afinador Pro - Lucas Gonzalez</title>
+    <title>Afinador - Lucas Gonzalez</title>
     
     <!-- Enlaces obligatorios PWA (Forzando limpieza de caché) -->
-    <link rel="manifest" href="./manifest.json?v=4">
+    <link rel="manifest" href="./manifest.json?v=5">
     <link rel="apple-touch-icon" href="./icono.png">
     
     <!-- Alertas Profesionales -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
+        /* --- VARIABLES GLOBALES DE NEÓN --- */
+        :root {
+            --color-neon: #333333;
+            --sombra-neon: none;
+            --brillo-texto: none;
+        }
+
+        .estado-bajo { 
+            --color-neon: #ff00ff; 
+            --sombra-neon: drop-shadow(0 0 12px #ff00ff);
+            --brillo-texto: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+        .estado-alto { 
+            --color-neon: #00f3ff; 
+            --sombra-neon: drop-shadow(0 0 12px #00f3ff);
+            --brillo-texto: 0 0 20px rgba(0, 243, 255, 0.8);
+        }
+        .estado-afinado { 
+            --color-neon: #10B981; 
+            --sombra-neon: drop-shadow(0 0 15px #10B981);
+            --brillo-texto: 0 0 30px rgba(16, 185, 129, 1);
+        }
+
         /* --- ESTILOS GENERALES Y DEL ECOSISTEMA --- */
         html, body {
             background-color: #0a0a0a; color: #ffffff;
@@ -26,8 +49,9 @@
 
         .titulo-flet {
             color: #00f3ff;
-            font-size: 1.8em; font-weight: 900; text-align: center;
-            margin-top: 40px; letter-spacing: 2px;
+            font-size: 2.2em; font-weight: 900; text-align: center;
+            margin-top: 40px; letter-spacing: 4px;
+            text-transform: uppercase;
         }
         
         .titulo-activacion {
@@ -41,15 +65,14 @@
 
         /* Botones estilo Flet Original */
         .btn-principal {
-            padding: 15px 30px; margin: 10px; font-size: 1em; font-weight: 700;
-            cursor: pointer; border-radius: 5px; transition: 0.3s;
-            width: 85%; max-width: 380px; text-transform: uppercase; letter-spacing: 1px;
+            padding: 18px 30px; margin: 10px; font-size: 1.1em; font-weight: 800;
+            cursor: pointer; border-radius: 8px; transition: 0.3s;
+            width: 85%; max-width: 380px; text-transform: uppercase; letter-spacing: 2px;
             display: flex; justify-content: center; align-items: center; gap: 10px;
             border: none;
         }
         .btn-fucsia { background-color: #ff00ff; color: #ffffff; box-shadow: 0 4px 15px rgba(255, 0, 255, 0.2); }
-        .btn-fucsia:active { background-color: #cc00cc; }
-        .btn-fucsia:disabled { background-color: #550055; color: #aaa; box-shadow: none; cursor: not-allowed; }
+        .btn-fucsia:active { background-color: #cc00cc; box-shadow: 0 0 25px rgba(255, 0, 255, 0.8); }
 
         /* Inputs estilo Flet */
         .input-cyber {
@@ -63,22 +86,32 @@
         /* --- ESTILOS DEL VELOCÍMETRO CYBERPUNK --- */
         .visor-afinador {
             width: 90%; max-width: 450px;
-            background: linear-gradient(180deg, #111, #080808);
+            background-color: #0d0d12;
+            /* Grid Holográfica */
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
             border: 2px solid #222;
             border-radius: 20px;
-            padding: 30px 15px;
-            margin-top: 30px;
+            padding: 40px 15px 30px 15px;
+            margin-top: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0, 243, 255, 0.05);
-            transition: all 0.3s ease;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 30px rgba(0, 0, 0, 0.8);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .estado-afinado.visor-afinador { 
+            border-color: rgba(16, 185, 129, 0.4); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 40px rgba(16, 185, 129, 0.15); 
         }
 
         .gauge-container {
             width: 100%;
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         .gauge-svg {
@@ -88,17 +121,29 @@
             overflow: visible;
         }
 
-        /* Aguja animada por CSS */
+        /* Aguja animada y estilizada por variables CSS */
         #grupo-aguja {
-            transform-origin: 100px 100px;
+            transform-origin: 100px 130px;
             transform: rotate(0deg);
-            transition: transform 0.15s ease-out; /* Suavidad en el movimiento */
+            transition: transform 0.1s ease-out; /* Super suave */
+        }
+        
+        #aguja-poligono {
+            fill: var(--color-neon);
+            filter: var(--sombra-neon);
+            transition: fill 0.2s, filter 0.2s;
+        }
+
+        #aguja-base {
+            stroke: var(--color-neon);
+            box-shadow: var(--sombra-neon);
+            transition: stroke 0.2s;
         }
 
         /* Textos superpuestos al velocímetro */
         .gauge-text {
             position: absolute;
-            bottom: 5px;
+            bottom: -15px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -106,60 +151,48 @@
         }
 
         .nota-display {
-            font-size: 5.5em;
+            font-size: 6.5em;
             font-weight: 900;
+            font-style: italic;
             line-height: 1;
             margin: 0;
-            color: #333; /* Estado inactivo */
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            color: var(--color-neon);
+            text-shadow: var(--brillo-texto);
             transition: color 0.2s ease, text-shadow 0.2s ease;
         }
         .nota-display span {
             font-size: 0.4em;
             vertical-align: super;
+            font-style: normal;
         }
 
-        .cents-display {
-            font-size: 1em;
-            font-weight: bold;
-            color: #555;
-            margin-top: 5px;
+        .hud-box {
+            display: inline-block;
+            border: 1px solid var(--color-neon);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            transition: border-color 0.2s ease;
         }
 
         .hz-display {
-            font-size: 1.1em;
-            color: #555;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: var(--color-neon);
             font-family: monospace;
             letter-spacing: 2px;
-            margin-top: 20px;
-        }
-
-        .estado-texto {
-            margin-top: 15px;
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #555;
-            letter-spacing: 3px;
-            text-transform: uppercase;
             transition: color 0.2s ease;
         }
 
-        /* --- ESTADOS DE COLOR DINÁMICOS --- */
-        .estado-bajo .nota-display { color: #ff00ff; text-shadow: 0 0 30px rgba(255, 0, 255, 0.6); }
-        .estado-bajo #aguja-linea { stroke: #ff00ff; filter: drop-shadow(0px 0px 8px #ff00ff); }
-        .estado-bajo #aguja-circulo { stroke: #ff00ff; }
-        .estado-bajo .estado-texto, .estado-bajo .cents-display { color: #ff00ff; }
-        
-        .estado-alto .nota-display { color: #00f3ff; text-shadow: 0 0 30px rgba(0, 243, 255, 0.6); }
-        .estado-alto #aguja-linea { stroke: #00f3ff; filter: drop-shadow(0px 0px 8px #00f3ff); }
-        .estado-alto #aguja-circulo { stroke: #00f3ff; }
-        .estado-alto .estado-texto, .estado-alto .cents-display { color: #00f3ff; }
-        
-        .estado-afinado .nota-display { color: #10B981; text-shadow: 0 0 40px rgba(16, 185, 129, 0.8); }
-        .estado-afinado #aguja-linea { stroke: #10B981; filter: drop-shadow(0px 0px 10px #10B981); }
-        .estado-afinado #aguja-circulo { stroke: #10B981; }
-        .estado-afinado .estado-texto, .estado-afinado .cents-display { color: #10B981; }
-        .estado-afinado.visor-afinador { border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(16, 185, 129, 0.1); }
+        #contenedor-encendido {
+            margin-top: 50px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
 
     </style>
 </head>
@@ -180,46 +213,49 @@
     </div>
 
     <!-- ================= PANTALLA 2: AFINADOR ================= -->
-    <div id="pantalla-afinador" class="pantalla" style="padding-top: 20px;">
-        <h1 class="titulo-flet" style="margin-top: 20px;">AFINADOR PRO</h1>
+    <div id="pantalla-afinador" class="pantalla" style="padding-top: 10px;">
+        <h1 class="titulo-flet">AFINADOR</h1>
         
         <div id="visor" class="visor-afinador">
             
-            <!-- Velocímetro Vectorial -->
+            <!-- Velocímetro Vectorial Avanzado -->
             <div class="gauge-container">
-                <svg viewBox="0 0 200 120" class="gauge-svg">
-                    <!-- Arco de fondo suave -->
-                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round"/>
+                <svg viewBox="0 0 200 150" class="gauge-svg">
+                    <!-- Arco de fondo grueso -->
+                    <path d="M 20 130 A 80 80 0 0 1 180 130" fill="none" stroke="#111" stroke-width="18" stroke-linecap="round"/>
                     
-                    <!-- Marcas (Ticks) -->
-                    <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#444" stroke-width="12" stroke-dasharray="2 18"/>
+                    <!-- Marcas (Ticks) segmentadas -->
+                    <path d="M 20 130 A 80 80 0 0 1 180 130" fill="none" stroke="#2a2a2a" stroke-width="18" stroke-dasharray="3 7"/>
                     
-                    <!-- Centro verde (Punto de afinación perfecto) -->
-                    <path d="M 97 20 A 80 80 0 0 1 103 20" fill="none" stroke="#10B981" stroke-width="14" stroke-linecap="round" opacity="0.5"/>
-                    <line x1="100" y1="12" x2="100" y2="28" stroke="#10B981" stroke-width="3" />
+                    <!-- Marcas de los extremos y el centro -->
+                    <path d="M 97 49 A 80 80 0 0 1 103 49" fill="none" stroke="#10B981" stroke-width="24" stroke-linecap="round" opacity="0.2"/>
+                    <line x1="100" y1="35" x2="100" y2="60" stroke="#10B981" stroke-width="3" />
 
-                    <!-- Aguja Animada -->
+                    <!-- Aguja Animada Cyberpunk -->
                     <g id="grupo-aguja">
-                        <line id="aguja-linea" x1="100" y1="100" x2="100" y2="20" stroke="#333" stroke-width="4" stroke-linecap="round" />
-                        <circle id="aguja-circulo" cx="100" cy="100" r="8" fill="#111" stroke="#333" stroke-width="3" />
+                        <!-- Cuerpo de la aguja -->
+                        <polygon id="aguja-poligono" points="97,130 103,130 100,45" />
+                        <!-- Círculo base -->
+                        <circle id="aguja-base" cx="100" cy="130" r="10" fill="#0a0a0a" stroke-width="3" />
                     </g>
                 </svg>
                 
-                <!-- Letra en el centro del arco -->
+                <!-- Textos Centrales -->
                 <div class="gauge-text">
                     <h2 id="nota-ui" class="nota-display">-</h2>
-                    <div id="cents-ui" class="cents-display">0 cents</div>
                 </div>
             </div>
             
-            <div id="hz-ui" class="hz-display">0.00 Hz</div>
-            <div id="estado-ui" class="estado-texto">ESPERANDO</div>
+            <!-- HUD Inferior con data técnica -->
+            <div class="hud-box">
+                <div id="hz-ui" class="hz-display">0.00 Hz</div>
+            </div>
         </div>
 
-        <div style="margin-top: 40px; width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <button id="btn-encender" class="btn-principal btn-fucsia" onclick="arrancarAfinador()">ENCENDER MICRÓFONO</button>
-            <p style="color: #666; font-size: 0.8em; text-align: center; width: 80%;">
-                Debes permitir el acceso al micrófono de tu dispositivo.
+        <div id="contenedor-encendido">
+            <button class="btn-principal btn-fucsia" onclick="arrancarAfinador()">ACTIVAR MICRÓFONO</button>
+            <p style="color: #555; font-size: 0.85em; text-align: center; width: 80%; margin-top: 15px;">
+                Requiere permisos de audio.
             </p>
         </div>
     </div>
@@ -274,7 +310,7 @@
             }
         }
 
-        // --- MOTOR DEL AFINADOR ---
+        // --- MOTOR DEL AFINADOR CROMÁTICO ---
         let audioContext;
         let analyser;
         let microphone;
@@ -287,11 +323,9 @@
         // Elementos de la UI
         const visorEl = document.getElementById('visor');
         const notaEl = document.getElementById('nota-ui');
-        const centsEl = document.getElementById('cents-ui');
         const hzEl = document.getElementById('hz-ui');
         const agujaGrupo = document.getElementById('grupo-aguja');
-        const estadoEl = document.getElementById('estado-ui');
-        const btnEncender = document.getElementById('btn-encender');
+        const contenedorEncendido = document.getElementById('contenedor-encendido');
 
         // Matemáticas Musicales
         function calcularNotaDesdeFrecuencia(frecuencia) {
@@ -327,7 +361,9 @@
                 rms += val * val;
             }
             rms = Math.sqrt(rms / SIZE);
-            if (rms < 0.01) return -1; // No hay volumen (Gate)
+            
+            // Subimos el umbral de corte para ignorar ruidos fantasmas
+            if (rms < 0.015) return -1; 
 
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
             for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
@@ -370,34 +406,31 @@
                     await audioContext.resume();
                 }
 
-                // Filtro Pasa-Bajos: El asesino de armónicas falsas
-                // Corta todo arriba de 350Hz. El Mi alto de la guitarra es 330Hz.
+                // Filtro Pasa-Bajos para matar los armónicos de guitarra
                 biquadFilter = audioContext.createBiquadFilter();
                 biquadFilter.type = "lowpass";
                 biquadFilter.frequency.value = 350; 
                 biquadFilter.Q.value = 1;
 
                 analyser = audioContext.createAnalyser();
-                // 4096 da mayor resolución en frecuencias bajas (graves)
                 analyser.fftSize = 4096;
 
                 microphone = audioContext.createMediaStreamSource(stream);
-                
-                // Pipeline: Micrófono -> Filtro LowPass -> Analizador
                 microphone.connect(biquadFilter);
                 biquadFilter.connect(analyser);
                 
                 isTuning = true;
-                btnEncender.innerText = "ESCUCHANDO...";
-                btnEncender.disabled = true;
-                btnEncender.className = "btn-principal btn-transparente";
+                
+                // Limpieza de UI: Ocultamos el botón al encender
+                contenedorEncendido.style.opacity = '0';
+                setTimeout(() => { contenedorEncendido.style.display = 'none'; }, 300);
                 
                 procesarAudio();
 
             } catch (err) {
                 Swal.fire({
-                    title: 'Error de Micrófono',
-                    text: 'Debes otorgar permisos al navegador para usar el micrófono.',
+                    title: 'Micrófono Inactivo',
+                    text: 'Debes otorgar permisos para poder afinar.',
                     icon: 'error',
                     background: '#1a1a1a', color: '#fff', confirmButtonColor: '#ff00ff'
                 });
@@ -413,44 +446,43 @@
 
             if (frecuenciaCruda !== -1) {
                 
-                // Sistema Anti-Oscilación (Smoothing)
-                // Si la frecuencia salta de golpe (cambiaste de cuerda), reseteamos rápido.
-                // Si está cerca, hacemos un promedio para que la aguja no tiemble.
+                // Sistema Anti-Oscilación Ultra Estable
                 if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaCruda) > 15) {
                     frecuenciaSuavizada = frecuenciaCruda;
                 } else {
-                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.8) + (frecuenciaCruda * 0.2);
+                    // 85% viejo, 15% nuevo (Movimiento súper denso y fluido)
+                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.85) + (frecuenciaCruda * 0.15);
                 }
 
                 let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
                 let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
+                // TRUCO DE ESTABILIDAD: Efecto Magnetismo al 0
+                // Si la aguja está muy cerca de la afinación perfecta, la "clava" en el medio.
+                if (Math.abs(cents) <= 2) {
+                    cents = 0;
+                }
+
                 // Actualizar Textos
                 notaEl.innerHTML = formatearNombreNota(notaMidi);
                 hzEl.innerText = frecuenciaSuavizada.toFixed(1) + " Hz";
-                
-                let signo = cents > 0 ? "+" : "";
-                centsEl.innerText = `${signo}${cents} cents`;
 
-                // Mapear los cents a los grados de la aguja (-50 a +50 cents = -65 a +65 grados)
-                let angulo = (cents / 50) * 65; 
-                if(angulo > 65) angulo = 65;
-                if(angulo < -65) angulo = -65;
+                // Mapear los cents a los grados de la aguja (-50 a +50 cents = -75 a +75 grados)
+                let angulo = (cents / 50) * 75; 
+                if(angulo > 75) angulo = 75;
+                if(angulo < -75) angulo = -75;
                 
                 agujaGrupo.style.transform = `rotate(${angulo}deg)`;
 
-                // Actualizar Clases de Estado
+                // Actualizar Clases de Estado (Inyectando variables CSS mágicamente)
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
 
-                if (cents < -3) {
+                if (cents < -2) {
                     visorEl.classList.add('estado-bajo');
-                    estadoEl.innerText = "BAJO";
-                } else if (cents > 3) {
+                } else if (cents > 2) {
                     visorEl.classList.add('estado-alto');
-                    estadoEl.innerText = "ALTO";
                 } else {
                     visorEl.classList.add('estado-afinado');
-                    estadoEl.innerText = "AFINADO";
                 }
             }
 
@@ -462,7 +494,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner2')
+                navigator.serviceWorker.register('./sw.js?v=tuner3')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
