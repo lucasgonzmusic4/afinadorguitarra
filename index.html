@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#050508">
     <title>Afinador Pro - Lucas Gonzalez</title>
     
-    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v7) -->
-    <link rel="manifest" href="./manifest.json?v=7">
+    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v8) -->
+    <link rel="manifest" href="./manifest.json?v=8">
     <link rel="apple-touch-icon" href="./icono.png">
     
     <!-- Fuentes Cyberpunk de Google Fonts -->
@@ -56,7 +56,6 @@
             user-select: none; -webkit-user-select: none;
         }
 
-        /* Cuadrícula Cyberpunk en el fondo de la pantalla */
         body {
             background-image: 
                 linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
@@ -84,7 +83,6 @@
         .pantalla { display: none; width: 100vw; min-height: 100vh; flex-direction: column; align-items: center; padding-bottom: 40px; }
         .activa { display: flex; }
 
-        /* Botones estilo Flet Original Modernizados */
         .btn-principal {
             font-family: 'Rajdhani', sans-serif;
             padding: 18px 30px; margin: 10px; font-size: 1.2em; font-weight: 800;
@@ -126,14 +124,13 @@
             border-color: rgba(16, 185, 129, 0.3); 
         }
 
-        /* 1. SECCIÓN SUPERIOR: LA NOTA GIGANTE */
         .nota-container {
             width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             margin-bottom: 20px;
-            min-height: 120px;
+            min-height: 120px; 
         }
 
         .nota-display {
@@ -152,7 +149,6 @@
             margin-left: -5px;
         }
 
-        /* 2. SECCIÓN MEDIA: VELOCÍMETRO LIMPIO */
         .gauge-container {
             width: 100%;
             max-width: 300px;
@@ -180,7 +176,6 @@
             transition: stroke 0.15s;
         }
 
-        /* 3. SECCIÓN INFERIOR: HUD TÉCNICO */
         .hud-box {
             display: flex;
             justify-content: space-between;
@@ -249,35 +244,25 @@
         
         <div id="visor" class="visor-afinador">
             
-            <!-- 1. Nota Principal Separada -->
             <div class="nota-container">
                 <h2 id="nota-ui" class="nota-display">-</h2>
             </div>
             
-            <!-- 2. Velocímetro Vectorial Limpio -->
             <div class="gauge-container">
                 <svg viewBox="0 0 200 120" class="gauge-svg">
-                    <!-- Arco de fondo grueso -->
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#15151a" stroke-width="12" stroke-linecap="round"/>
-                    
-                    <!-- Marcas (Ticks) segmentadas tecnológicas -->
                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2a2a35" stroke-width="12" stroke-dasharray="2 10.5"/>
-                    
-                    <!-- Marcas de los extremos y el centro (Verde) -->
                     <path d="M 96 20 A 80 80 0 0 1 104 20" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round" opacity="0.15"/>
                     <line x1="100" y1="8" x2="100" y2="32" stroke="#10B981" stroke-width="3" />
 
-                    <!-- Aguja Animada Cyberpunk (Con transform nativo SVG y transición CSS rápida) -->
-                    <g id="grupo-aguja" style="transform-origin: 100px 100px; transition: transform 0.15s ease-out;">
-                        <!-- Cuerpo de la aguja -->
+                    <!-- Aguja Animada -->
+                    <g id="grupo-aguja" style="transform-origin: 100px 100px; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);">
                         <polygon id="aguja-poligono" points="98,100 102,100 100,20" />
-                        <!-- Círculo base hueco -->
                         <circle id="aguja-base" cx="100" cy="100" r="8" stroke-width="3" />
                     </g>
                 </svg>
             </div>
             
-            <!-- 3. HUD Inferior con data técnica -->
             <div class="hud-box">
                 <div class="hud-valor">
                     <span class="hud-label">DESVÍO</span>
@@ -290,7 +275,6 @@
             </div>
         </div>
 
-        <!-- Contenedor del Botón (Desaparece al encender) -->
         <div id="contenedor-encendido">
             <button class="btn-principal btn-fucsia" onclick="arrancarAfinador()">ACTIVAR MICRÓFONO</button>
             <p style="color: #555; font-size: 1em; text-align: center; width: 80%; margin-top: 15px;">
@@ -349,7 +333,7 @@
             }
         }
 
-        // --- MOTOR DEL AFINADOR CROMÁTICO ---
+        // --- MOTOR DEL AFINADOR CROMÁTICO AVANZADO ---
         let audioContext;
         let analyser;
         let microphone;
@@ -359,7 +343,6 @@
         const NOMBRES_NOTAS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
         const A4_FREQ = 440; 
         
-        // Elementos de la UI
         const visorEl = document.getElementById('visor');
         const notaEl = document.getElementById('nota-ui');
         const centsEl = document.getElementById('cents-ui');
@@ -367,7 +350,6 @@
         const agujaGrupo = document.getElementById('grupo-aguja');
         const contenedorEncendido = document.getElementById('contenedor-encendido');
 
-        // Matemáticas Musicales
         function calcularNotaDesdeFrecuencia(frecuencia) {
             let noteNum = 12 * (Math.log(frecuencia / A4_FREQ) / Math.log(2));
             return Math.round(noteNum) + 69;
@@ -391,7 +373,7 @@
             return nombre;
         }
 
-        // Algoritmo de Autocorrelación para JS
+        // Autocorrelación para JS
         function autoCorrelate(buf, sampleRate) {
             let SIZE = buf.length;
             let rms = 0;
@@ -402,7 +384,7 @@
             }
             rms = Math.sqrt(rms / SIZE);
             
-            if (rms < 0.015) return -1; // Gate de sonido
+            if (rms < 0.01) return -1; // Silencio o ruido blanco
 
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
             for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
@@ -447,11 +429,13 @@
 
                 biquadFilter = audioContext.createBiquadFilter();
                 biquadFilter.type = "lowpass";
-                biquadFilter.frequency.value = 350; 
+                biquadFilter.frequency.value = 350; // Corta armónicas agudas de la guitarra
                 biquadFilter.Q.value = 1;
 
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 4096;
+                // AUMENTO MASIVO DEL BUFFER (De 4096 a 8192)
+                // Capta mejor las ondas largas y lentas del E grave (6ta cuerda)
+                analyser.fftSize = 8192;
 
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(biquadFilter);
@@ -459,7 +443,6 @@
                 
                 isTuning = true;
                 
-                // Efecto desaparición del botón
                 contenedorEncendido.style.opacity = '0';
                 setTimeout(() => { contenedorEncendido.style.display = 'none'; }, 300);
                 
@@ -475,12 +458,12 @@
             }
         }
 
-        let buffer = new Float32Array(4096);
+        let buffer = new Float32Array(8192); // Array doblemente largo
         let frecuenciaSuavizada = 0;
         
-        // Memoria para el filtro de mediana (Elimina saltos falsos)
+        // Memoria expandida para el filtro de mediana
         let historialFrecuencias = [];
-        const MAX_HISTORIAL = 5;
+        const MAX_HISTORIAL = 9; // De 5 a 9 lecturas (Máxima estabilidad)
 
         function procesarAudio() {
             analyser.getFloatTimeDomainData(buffer);
@@ -488,8 +471,20 @@
 
             if (frecuenciaCruda !== -1) {
                 
-                // 1. FILTRO DE MEDIANA: Descartar picos locos guardando historial
-                historialFrecuencias.push(frecuenciaCruda);
+                let freqProcesada = frecuenciaCruda;
+
+                // SUPRESOR DE SALTOS DE OCTAVA (Octave-Jump Blocker)
+                // Si la guitarra te engaña tirando el primer armónico, el algoritmo lo detecta y lo parte a la mitad.
+                if (frecuenciaSuavizada > 0) {
+                    if (freqProcesada > frecuenciaSuavizada * 1.85 && freqProcesada < frecuenciaSuavizada * 2.15) {
+                        freqProcesada = freqProcesada / 2;
+                    } else if (freqProcesada < frecuenciaSuavizada * 0.55 && freqProcesada > frecuenciaSuavizada * 0.45) {
+                        freqProcesada = freqProcesada * 2;
+                    }
+                }
+
+                // FILTRO DE MEDIANA (Ignora picos aleatorios)
+                historialFrecuencias.push(freqProcesada);
                 if (historialFrecuencias.length > MAX_HISTORIAL) {
                     historialFrecuencias.shift();
                 }
@@ -497,21 +492,18 @@
                 let tempSorted = [...historialFrecuencias].sort((a, b) => a - b);
                 let frecuenciaFiltrada = tempSorted[Math.floor(tempSorted.length / 2)];
 
-                // 2. AMORTIGUADOR PESADO (Inercia de la aguja)
+                // AMORTIGUADOR DE AGUJA (Inercia)
                 if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaFiltrada) > 20) {
                     frecuenciaSuavizada = frecuenciaFiltrada;
                 } else {
-                    // 90% viejo, 10% nuevo (Movimiento súper estable)
                     frecuenciaSuavizada = (frecuenciaSuavizada * 0.90) + (frecuenciaFiltrada * 0.10);
                 }
 
                 let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
                 let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
-                // 3. IMÁN AMPLIADO (Si estás entre -3 y +3, clava la aguja en 0)
-                if (Math.abs(cents) <= 3) {
-                    cents = 0;
-                }
+                // IMÁN AMPLIADO (Entre -3 y +3 cents clava en el centro absoluto)
+                if (Math.abs(cents) <= 3) cents = 0;
 
                 // Actualizar Textos
                 notaEl.innerHTML = formatearNombreNota(notaMidi);
@@ -520,15 +512,14 @@
                 let signo = cents > 0 ? "+" : "";
                 centsEl.innerText = `${signo}${cents}`;
 
-                // Mapear Cents a Grados (Arco de -75 a +75 grados)
+                // Mapear Cents a Grados
                 let angulo = (cents / 50) * 75; 
                 if(angulo > 75) angulo = 75;
                 if(angulo < -75) angulo = -75;
                 
-                // Transform por CSS, aprovechando la transición suave
-                agujaGrupo.style.transform = `rotate(${angulo}deg)`;
+                agujaGrupo.setAttribute('transform', `rotate(${angulo}, 100, 100)`);
 
-                // Actualizar Clases (Inyecta colores a los paneles y aguja)
+                // Actualizar Clases de color
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
 
                 if (cents < -3) {
@@ -548,7 +539,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner5')
+                navigator.serviceWorker.register('./sw.js?v=tuner6')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
