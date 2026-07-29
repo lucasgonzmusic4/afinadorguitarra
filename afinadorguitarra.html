@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Afinador - Lucas Gonzalez</title>
+    
+    <!-- Enlaces obligatorios PWA -->
+    <link rel="manifest" href="./manifest.json?v=1">
+    <link rel="apple-touch-icon" href="./icono.png">
+    
+    <!-- Alertas Profesionales -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        /* --- ESTILOS GENERALES Y DEL ECOSISTEMA --- */
+        html, body {
+            background-color: #0a0a0a; color: #ffffff;
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden; 
+            user-select: none; -webkit-user-select: none;
+        }
+
+        .titulo-flet {
+            color: #00f3ff;
+            font-size: 1.8em; font-weight: 900; text-align: center;
+            margin-top: 40px; letter-spacing: 2px;
+        }
+        
+        .titulo-activacion {
+            color: #ff00ff;
+            font-size: 1.5em; font-weight: 900; text-align: center;
+            margin-top: 40px; letter-spacing: 2px;
+        }
+
+        .pantalla { display: none; width: 100vw; min-height: 100vh; flex-direction: column; align-items: center; background-color: #0a0a0a; padding-bottom: 40px; }
+        .activa { display: flex; }
+
+        /* Botones estilo Flet Original */
+        .btn-principal {
+            padding: 15px 30px; margin: 10px; font-size: 1em; font-weight: 700;
+            cursor: pointer; border-radius: 5px; transition: 0.3s;
+            width: 85%; max-width: 380px; text-transform: uppercase; letter-spacing: 1px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            border: none;
+        }
+        .btn-fucsia { background-color: #ff00ff; color: #ffffff; box-shadow: 0 4px 15px rgba(255, 0, 255, 0.2); }
+        .btn-fucsia:active { background-color: #cc00cc; }
+        .btn-fucsia:disabled { background-color: #550055; color: #aaa; box-shadow: none; cursor: not-allowed; }
+
+        .btn-transparente { background-color: transparent; color: #00f3ff; border: 1px solid #00f3ff; }
+        .btn-transparente:active { background-color: rgba(0, 243, 255, 0.1); }
+
+        /* Inputs estilo Flet */
+        .input-cyber {
+            width: 90%; max-width: 420px; padding: 15px;
+            background-color: #111; color: #00f3ff; border: 1px solid #ff00ff;
+            border-radius: 5px; font-size: 1.1em; margin-bottom: 20px;
+            outline: none; box-sizing: border-box; font-weight: bold;
+        }
+        .input-cyber:focus { box-shadow: 0 0 10px rgba(255,0,255,0.3); }
+
+        /* --- ESTILOS ESPECÍFICOS DEL AFINADOR --- */
+        .visor-afinador {
+            width: 90%; max-width: 500px;
+            background: linear-gradient(180deg, #111, #0a0a0a);
+            border: 2px solid #222;
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0, 243, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .nota-display {
+            font-size: 7em;
+            font-weight: 900;
+            line-height: 1;
+            margin: 0;
+            color: #333; /* Estado inactivo */
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+        }
+        .nota-display span {
+            font-size: 0.4em;
+            vertical-align: super;
+        }
+
+        .hz-display {
+            font-size: 1.2em;
+            color: #555;
+            font-family: monospace;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            margin-bottom: 40px;
+        }
+
+        /* Medidor (Gauge) */
+        .gauge-container {
+            width: 100%;
+            height: 40px;
+            position: relative;
+            background: #1a1a1a;
+            border-radius: 20px;
+            border: 1px solid #333;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .gauge-centro {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background-color: #fff;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .gauge-aguja {
+            position: absolute;
+            left: 50%; /* Punto de inicio 0 cents */
+            width: 15px;
+            height: 110%;
+            background-color: #333;
+            border-radius: 5px;
+            transform: translateX(-50%);
+            transition: transform 0.1s linear, background-color 0.2s ease;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .estado-texto {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #555;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* --- ESTADOS DE COLOR DINÁMICOS --- */
+        .estado-bajo .nota-display { color: #ff00ff; text-shadow: 0 0 30px rgba(255, 0, 255, 0.6); }
+        .estado-bajo .gauge-aguja { background-color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
+        .estado-bajo .estado-texto { color: #ff00ff; }
+        
+        .estado-alto .nota-display { color: #00f3ff; text-shadow: 0 0 30px rgba(0, 243, 255, 0.6); }
+        .estado-alto .gauge-aguja { background-color: #00f3ff; box-shadow: 0 0 15px #00f3ff; }
+        .estado-alto .estado-texto { color: #00f3ff; }
+        
+        .estado-afinado .nota-display { color: #10B981; text-shadow: 0 0 40px rgba(16, 185, 129, 0.8); }
+        .estado-afinado .gauge-aguja { background-color: #10B981; box-shadow: 0 0 20px #10B981; }
+        .estado-afinado .estado-texto { color: #10B981; }
+        .estado-afinado.visor-afinador { border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(16, 185, 129, 0.1); }
+
+    </style>
+</head>
+<body>
+
+    <!-- ================= PANTALLA 1: LOGIN ================= -->
+    <div id="pantalla-login" class="pantalla activa">
+        <h1 class="titulo-activacion">ACTIVACIÓN DE SOFTWARE</h1>
+        
+        <div style="margin-top: 20px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <p style="color: #777; width: 90%; max-width: 420px; text-align: center; margin-bottom: 20px; font-size: 0.9em;">
+                Ingresa el correo con el que realizaste la compra.
+            </p>
+            <input type="email" id="input-email-login" class="input-cyber" style="border-color: #00f3ff; color: #fff;" placeholder="Email de Compra">
+            <button class="btn-principal btn-fucsia" onclick="intentarActivar()">ACTIVAR APLICACIÓN</button>
+            <p id="mensaje-login" style="color: red; font-weight: bold; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <!-- ================= PANTALLA 2: AFINADOR ================= -->
+    <div id="pantalla-afinador" class="pantalla" style="padding-top: 20px;">
+        <h1 class="titulo-flet" style="margin-top: 20px;">AFINADOR CROMÁTICO</h1>
+        
+        <div id="visor" class="visor-afinador">
+            <h2 id="nota-ui" class="nota-display">-</h2>
+            <div id="hz-ui" class="hz-display">0.00 Hz</div>
+            
+            <div class="gauge-container">
+                <div class="gauge-centro"></div>
+                <div id="aguja-ui" class="gauge-aguja"></div>
+            </div>
+            
+            <div id="estado-ui" class="estado-texto">ESPERANDO</div>
+        </div>
+
+        <div style="margin-top: 40px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <button id="btn-encender" class="btn-principal btn-fucsia" onclick="arrancarAfinador()">ENCENDER MICRÓFONO</button>
+            <p style="color: #666; font-size: 0.8em; text-align: center; width: 80%;">
+                Debes permitir el acceso al micrófono de tu dispositivo.
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= LÓGICA DE LA APP ================= -->
+    <script>
+        // --- SISTEMA DE DATOS Y LOGIN ---
+        const URL_RECEPCIONISTA = "https://script.google.com/macros/s/AKfycbx6-2gfl9UGXOi5CQDaEC55_89hsRflJGF8DyiC9jz4hw82mhMaEmeK99Y4VxOKoVW6/exec";
+        
+        function obtenerDeviceID() {
+            let id = localStorage.getItem('afinador_device_id');
+            if (!id) {
+                id = crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('afinador_device_id', id);
+            }
+            return id;
+        }
+
+        window.onload = () => {
+            if (localStorage.getItem('afinador_activado') === 'true') {
+                cambiarPantalla('pantalla-afinador');
+            }
+        };
+
+        function cambiarPantalla(id) {
+            document.querySelectorAll('.pantalla').forEach(p => p.classList.remove('activa'));
+            document.getElementById(id).classList.add('activa');
+        }
+
+        async function intentarActivar() {
+            let email = document.getElementById('input-email-login').value.trim();
+            let msj = document.getElementById('mensaje-login');
+
+            if (!email) { msj.innerText = "Por favor, ingresa un correo."; msj.style.color = "red"; return; }
+            msj.innerText = "Conectando con el servidor..."; msj.style.color = "#00f3ff";
+            
+            try {
+                let response = await fetch(URL_RECEPCIONISTA, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ email: email, deviceID: obtenerDeviceID() })
+                });
+                let data = await response.json();
+                if (data.status === "OK") {
+                    localStorage.setItem('afinador_activado', 'true');
+                    cambiarPantalla('pantalla-afinador');
+                } else {
+                    msj.innerText = data.message || "Error de validación"; msj.style.color = "red";
+                }
+            } catch (error) {
+                msj.innerText = "Sin conexión a internet."; msj.style.color = "red";
+            }
+        }
+
+        // --- MOTOR DEL AFINADOR ---
+        let audioContext;
+        let analyser;
+        let microphone;
+        let isTuning = false;
+
+        const NOMBRES_NOTAS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        
+        // Frecuencia estándar del LA (A4)
+        const A4_FREQ = 440; 
+        
+        // Elementos de la UI
+        const visorEl = document.getElementById('visor');
+        const notaEl = document.getElementById('nota-ui');
+        const hzEl = document.getElementById('hz-ui');
+        const agujaEl = document.getElementById('aguja-ui');
+        const estadoEl = document.getElementById('estado-ui');
+        const btnEncender = document.getElementById('btn-encender');
+
+        // Matemáticas Musicales
+        function calcularNotaDesdeFrecuencia(frecuencia) {
+            // Formula MIDI: 69 es el LA4
+            let noteNum = 12 * (Math.log(frecuencia / A4_FREQ) / Math.log(2));
+            return Math.round(noteNum) + 69;
+        }
+
+        function calcularFrecuenciaDesdeNota(notaMidi) {
+            return A4_FREQ * Math.pow(2, (notaMidi - 69) / 12);
+        }
+
+        function calcularCentsOffset(frecuenciaReal, notaMidiCentral) {
+            let freqCentral = calcularFrecuenciaDesdeNota(notaMidiCentral);
+            return Math.floor(1200 * Math.log(frecuenciaReal / freqCentral) / Math.log(2));
+        }
+
+        function formatearNombreNota(notaMidi) {
+            let nombre = NOMBRES_NOTAS[notaMidi % 12];
+            let octava = Math.floor(notaMidi / 12) - 1;
+            
+            if(nombre.includes("#")) {
+                let partes = nombre.split("#");
+                return `${partes[0]}<span>#</span>`;
+            }
+            return nombre;
+        }
+
+        // Algoritmo de Autocorrelación para JS (Robusto para guitarra)
+        function autoCorrelate(buf, sampleRate) {
+            let SIZE = buf.length;
+            let rms = 0;
+
+            for (let i = 0; i < SIZE; i++) {
+                let val = buf[i];
+                rms += val * val;
+            }
+            rms = Math.sqrt(rms / SIZE);
+            if (rms < 0.01) return -1; // No hay volumen suficiente
+
+            let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+            for (let i = 0; i < SIZE / 2; i++)
+                if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+            for (let i = 1; i < SIZE / 2; i++)
+                if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+
+            buf = buf.slice(r1, r2);
+            SIZE = buf.length;
+
+            let c = new Array(SIZE).fill(0);
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE - i; j++) {
+                    c[i] = c[i] + buf[j] * buf[j + i];
+                }
+            }
+
+            let d = 0; while (c[d] > c[d + 1]) d++;
+            let maxval = -1, maxpos = -1;
+            for (let i = d; i < SIZE; i++) {
+                if (c[i] > maxval) {
+                    maxval = c[i];
+                    maxpos = i;
+                }
+            }
+            let T0 = maxpos;
+
+            let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+            let a = (x1 + x3 - 2 * x2) / 2;
+            let b = (x3 - x1) / 2;
+            if (a) T0 = T0 - b / (2 * a);
+
+            return sampleRate / T0;
+        }
+
+        async function arrancarAfinador() {
+            if (isTuning) return;
+
+            try {
+                // 1. Pedir micrófono (El usuario debe aceptar el cartel)
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // 2. Inicializar el motor de audio web
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if(audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                
+                // Actualizar interfaz
+                isTuning = true;
+                btnEncender.innerText = "ESCUCHANDO...";
+                btnEncender.disabled = true;
+                btnEncender.className = "btn-principal btn-transparente";
+                
+                // Arrancar el bucle
+                procesarAudio();
+
+            } catch (err) {
+                Swal.fire({
+                    title: 'Error de Micrófono',
+                    text: 'Debes otorgar permisos al navegador para usar el micrófono.',
+                    icon: 'error',
+                    background: '#1a1a1a', color: '#fff', confirmButtonColor: '#ff00ff'
+                });
+            }
+        }
+
+        let buffer = new Float32Array(2048);
+
+        function procesarAudio() {
+            analyser.getFloatTimeDomainData(buffer);
+            let frecuenciaHz = autoCorrelate(buffer, audioContext.sampleRate);
+
+            if (frecuenciaHz === -1) {
+                // No hay sonido, apagamos UI sutilmente
+                if(visorEl.classList.contains('estado-afinado')) {
+                    // Mantener el color un ratito o limpiar
+                }
+            } else {
+                // Hay sonido: calcular matemáticas
+                let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaHz);
+                let cents = calcularCentsOffset(frecuenciaHz, notaMidi);
+
+                // Actualizar Textos
+                notaEl.innerHTML = formatearNombreNota(notaMidi);
+                hzEl.innerText = frecuenciaHz.toFixed(1) + " Hz";
+
+                // Mapear los cents (-50 a +50) a píxeles en el CSS (traslación de -50% base)
+                // -50 cents = -200px (izquierda), +50 cents = +200px (derecha) en el UI
+                let desplazamiento = (cents * 2.5); 
+                // Evitar que la aguja se salga del cuadro visualmente
+                if(desplazamiento < -140) desplazamiento = -140;
+                if(desplazamiento > 140) desplazamiento = 140;
+                
+                agujaEl.style.transform = `translateX(calc(-50% + ${desplazamiento}px))`;
+
+                // Actualizar Clases de Estado (Colores de Neón)
+                visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
+
+                if (cents < -3) {
+                    visorEl.classList.add('estado-bajo');
+                    estadoEl.innerText = "BAJO";
+                } else if (cents > 3) {
+                    visorEl.classList.add('estado-alto');
+                    estadoEl.innerText = "ALTO";
+                } else {
+                    visorEl.classList.add('estado-afinado');
+                    estadoEl.innerText = "AFINADO";
+                }
+            }
+
+            // Bucle a 60 FPS
+            if(isTuning) {
+                requestAnimationFrame(procesarAudio);
+            }
+        }
+
+        // --- SCRIPT PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js?v=tuner1')
+                    .then(reg => console.log('SW Registrado'))
+                    .catch(err => console.log('Error SW:', err));
+            });
+        }
+    </script>
+</body>
+</html>
