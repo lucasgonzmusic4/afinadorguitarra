@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#050508">
     <title>Afinador Pro - Lucas Gonzalez</title>
     
-    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v8) -->
-    <link rel="manifest" href="./manifest.json?v=8">
+    <!-- Enlaces obligatorios PWA (Forzando limpieza de caché v9) -->
+    <link rel="manifest" href="./manifest.json?v=9">
     <link rel="apple-touch-icon" href="./icono.png">
     
     <!-- Fuentes Cyberpunk de Google Fonts -->
@@ -166,6 +166,7 @@
         #aguja-poligono {
             fill: var(--color-neon);
             filter: var(--sombra-neon);
+            /* Transiciones de color mantenidas, pero sin transición de movimiento */
             transition: fill 0.15s, filter 0.15s;
         }
 
@@ -255,8 +256,8 @@
                     <path d="M 96 20 A 80 80 0 0 1 104 20" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round" opacity="0.15"/>
                     <line x1="100" y1="8" x2="100" y2="32" stroke="#10B981" stroke-width="3" />
 
-                    <!-- Aguja Animada -->
-                    <g id="grupo-aguja" style="transform-origin: 100px 100px; transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);">
+                    <!-- Aguja Animada sin CSS Transition (Puro Javascript a 60fps) -->
+                    <g id="grupo-aguja" style="transform-origin: 100px 100px;">
                         <polygon id="aguja-poligono" points="98,100 102,100 100,20" />
                         <circle id="aguja-base" cx="100" cy="100" r="8" stroke-width="3" />
                     </g>
@@ -333,7 +334,7 @@
             }
         }
 
-        // --- MOTOR DEL AFINADOR CROMÁTICO AVANZADO ---
+        // --- MOTOR DEL AFINADOR CROMÁTICO ---
         let audioContext;
         let analyser;
         let microphone;
@@ -373,7 +374,6 @@
             return nombre;
         }
 
-        // Autocorrelación para JS
         function autoCorrelate(buf, sampleRate) {
             let SIZE = buf.length;
             let rms = 0;
@@ -384,7 +384,7 @@
             }
             rms = Math.sqrt(rms / SIZE);
             
-            if (rms < 0.01) return -1; // Silencio o ruido blanco
+            if (rms < 0.01) return -1; 
 
             let r1 = 0, r2 = SIZE - 1, thres = 0.2;
             for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
@@ -429,12 +429,10 @@
 
                 biquadFilter = audioContext.createBiquadFilter();
                 biquadFilter.type = "lowpass";
-                biquadFilter.frequency.value = 350; // Corta armónicas agudas de la guitarra
+                biquadFilter.frequency.value = 350; 
                 biquadFilter.Q.value = 1;
 
                 analyser = audioContext.createAnalyser();
-                // AUMENTO MASIVO DEL BUFFER (De 4096 a 8192)
-                // Capta mejor las ondas largas y lentas del E grave (6ta cuerda)
                 analyser.fftSize = 8192;
 
                 microphone = audioContext.createMediaStreamSource(stream);
@@ -458,23 +456,20 @@
             }
         }
 
-        let buffer = new Float32Array(8192); // Array doblemente largo
+        let buffer = new Float32Array(8192); 
         let frecuenciaSuavizada = 0;
         
-        // Memoria expandida para el filtro de mediana
+        // Memoria para el filtro de mediana recortada a 5 para menor lag
         let historialFrecuencias = [];
-        const MAX_HISTORIAL = 9; // De 5 a 9 lecturas (Máxima estabilidad)
+        const MAX_HISTORIAL = 5; 
 
         function procesarAudio() {
             analyser.getFloatTimeDomainData(buffer);
             let frecuenciaCruda = autoCorrelate(buffer, audioContext.sampleRate);
 
             if (frecuenciaCruda !== -1) {
-                
                 let freqProcesada = frecuenciaCruda;
 
-                // SUPRESOR DE SALTOS DE OCTAVA (Octave-Jump Blocker)
-                // Si la guitarra te engaña tirando el primer armónico, el algoritmo lo detecta y lo parte a la mitad.
                 if (frecuenciaSuavizada > 0) {
                     if (freqProcesada > frecuenciaSuavizada * 1.85 && freqProcesada < frecuenciaSuavizada * 2.15) {
                         freqProcesada = freqProcesada / 2;
@@ -483,7 +478,7 @@
                     }
                 }
 
-                // FILTRO DE MEDIANA (Ignora picos aleatorios)
+                // FILTRO DE MEDIANA (Atenuado para mayor respuesta)
                 historialFrecuencias.push(freqProcesada);
                 if (historialFrecuencias.length > MAX_HISTORIAL) {
                     historialFrecuencias.shift();
@@ -492,17 +487,18 @@
                 let tempSorted = [...historialFrecuencias].sort((a, b) => a - b);
                 let frecuenciaFiltrada = tempSorted[Math.floor(tempSorted.length / 2)];
 
-                // AMORTIGUADOR DE AGUJA (Inercia)
+                // AMORTIGUADOR RÁPIDO (Menos inercia matemática = reacción en tiempo real)
                 if (frecuenciaSuavizada === 0 || Math.abs(frecuenciaSuavizada - frecuenciaFiltrada) > 20) {
                     frecuenciaSuavizada = frecuenciaFiltrada;
                 } else {
-                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.90) + (frecuenciaFiltrada * 0.10);
+                    // 60% viejo, 40% nuevo (Más sensible al movimiento real de la clavija)
+                    frecuenciaSuavizada = (frecuenciaSuavizada * 0.60) + (frecuenciaFiltrada * 0.40);
                 }
 
                 let notaMidi = calcularNotaDesdeFrecuencia(frecuenciaSuavizada);
                 let cents = calcularCentsOffset(frecuenciaSuavizada, notaMidi);
 
-                // IMÁN AMPLIADO (Entre -3 y +3 cents clava en el centro absoluto)
+                // IMÁN
                 if (Math.abs(cents) <= 3) cents = 0;
 
                 // Actualizar Textos
@@ -517,9 +513,9 @@
                 if(angulo > 75) angulo = 75;
                 if(angulo < -75) angulo = -75;
                 
-                agujaGrupo.setAttribute('transform', `rotate(${angulo}, 100, 100)`);
+                // Aplicación directa sin CSS Transition (Fluidéz de 60fps)
+                agujaGrupo.style.transform = `rotate(${angulo}deg)`;
 
-                // Actualizar Clases de color
                 visorEl.classList.remove('estado-bajo', 'estado-alto', 'estado-afinado');
 
                 if (cents < -3) {
@@ -539,7 +535,7 @@
         // --- SCRIPT PWA ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=tuner6')
+                navigator.serviceWorker.register('./sw.js?v=tuner7')
                     .then(reg => console.log('SW Registrado'))
                     .catch(err => console.log('Error SW:', err));
             });
