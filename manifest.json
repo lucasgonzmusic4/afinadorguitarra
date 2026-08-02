@@ -1,6 +1,6 @@
 {
-  "name": "Afinador de Guitarra Lucas Gonzalez",
-  "short_name": "Afinador LG",
+  "name": "Afinador Cromático",
+  "short_name": "Afinador",
   "description": "Afinador cromático de alta precisión",
   "start_url": "./index.html",
   "display": "standalone",
